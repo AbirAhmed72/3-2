@@ -1,1 +1,1 @@
-# 3-2
+# 6th Semester of Bachelor of Science in Software Engineering, Institute of Information Technology
