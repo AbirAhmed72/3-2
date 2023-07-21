@@ -60,11 +60,11 @@ model = jb.load('../trained_model')
 
 @app.post('/token', response_model=schemas.Token)
 def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user_dict = services.get_user_by_email(db, form_data.username)
+    user_dict = services.get_user_by_email(db, form_data.email)
     if not user_dict:
-        user_dict = services.get_doctor_by_email(db, form_data.username)
+        user_dict = services.get_doctor_by_email(db, form_data.email)
     if not user_dict:
-        user_dict = services.get_admin_by_email(db,form_data.username)
+        user_dict = services.get_admin_by_email(db,form_data.email)
     if not user_dict:
         raise HTTPException(
             status_code=401,

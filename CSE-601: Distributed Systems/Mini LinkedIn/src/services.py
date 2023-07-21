@@ -32,8 +32,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = create_hashed_password(user.password)
     db_user = models.User(
         # username = user.username,
-        name = user.name,
-        email = user.email,
+        username = user.username,
         password_hashed = hashed_password,
         # is_active = True
     )
@@ -45,44 +44,27 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_username(db: Session, username: str):
     print("Checking existing users")
-    return db.query(models.User).filter(models.User.email == email).first()
-
-
+    return db.query(models.User).filter(models.User.username == username).first()
 
 def get_user_by_id(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.User).filter(models.User.id == id).first()
+
+def make_post(db: Session, current_username: str, post: schemas.PostData):
+    db_post = models.Post(
+        post_text = post.post_text,
+        image_url = post.image_url,
+        created_at = datetime.utcnow(),
+        username = current_username
+    )
+    db.add(db_post)
+    db.commit()
+    db.refresh(db_post)
+
+    return db_post
  
-
-# def get_specialized_doctors_list(db: Session, doctor_specialization: str, skip: int = 0, limit: int = 10) -> List[schemas.DoctorData]:
-#     doctors = db.query(models.Doctors).filter(models.Doctors.specialization == doctor_specialization, models.Doctors.is_approved == True).offset(skip).limit(limit).all()
-#     specialized_doctors = []
-#     for doctor in doctors:
-#         specialized_doctors.append(
-#             schemas.DoctorData(
-#                 id=doctor.id,
-#                 email=doctor.email,
-#                 name=doctor.name,
-#                 specialization=doctor.specialization,
-#                 approval=doctor.is_approved
-#             )
-#         )
-#     return specialized_doctors
-
-
-# def get_doctor_by_email(db: Session, email: str):
-#     return db.query(models.Doctors).filter(models.Doctors.email == email).first()
-
-
-
-# def get_doctor_by_id(db: Session, id: int):
-#     return db.query(models.Doctors).filter(models.Doctors.id == id).first()
-
-
-
-
 # def make_appointment(db:Session, current_user_id:int, doctor_id: int, data: schemas.ConsultationData):
 
 #     appointment = models.Consultation(
@@ -100,6 +82,34 @@ def get_user_by_id(db: Session, id: int):
 #     db.refresh(appointment)
 #     # print(db.query(models.Consultation).filter(models.Consultation.user_id == current_user_id).first())
 #     return db.query(models.Consultation).filter(models.Consultation.user_id == current_user_id).first()
+
+# def get_specialized_doctors_list(db: Session, doctor_specialization: str, skip: int = 0, limit: int = 10) -> List[schemas.DoctorData]:
+#     doctors = db.query(models.Doctors).filter(models.Doctors.specialization == doctor_specialization, models.Doctors.is_approved == True).offset(skip).limit(limit).all()
+#     specialized_doctors = []
+#     for doctor in doctors:
+#         specialized_doctors.append(
+#             schemas.DoctorData(
+#                 id=doctor.id,
+#                 username=doctor.username,
+#                 name=doctor.name,
+#                 specialization=doctor.specialization,
+#                 approval=doctor.is_approved
+#             )
+#         )
+#     return specialized_doctors
+
+
+# def get_doctor_by_username(db: Session, username: str):
+#     return db.query(models.Doctors).filter(models.Doctors.username == username).first()
+
+
+
+# def get_doctor_by_id(db: Session, id: int):
+#     return db.query(models.Doctors).filter(models.Doctors.id == id).first()
+
+
+
+
 
 
 

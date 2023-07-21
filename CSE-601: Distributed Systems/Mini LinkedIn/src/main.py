@@ -43,41 +43,65 @@ credentials_exception = HTTPException(
         headers={"WWW-Authenticate": "Bearer"}
     )
         
-# def verify_user(token: str):
-#     try:
-#         payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
-#         email: str = payload.get("sub")
-#         if email is None:
-#             raise credentials_exception
-#         token_data = schemas.TokenData(username = email)
-#         return token_data
-#     except JWTError:
-#         raise credentials_exception
+def verify_user(token: str) -> TokenData:
+    try:
+        payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username = username)
+        return token_data
+    except JWTError:
+        raise credentials_exception
 
 @app.post('/register')
 async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
-    db_user = services.get_user_by_email(db, user_data.email)
+    db_user = services.get_user_by_username(db, user_data.username)
     if db_user:
          raise HTTPException(status_code=400, detail="E-mail already Registered")
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = services.create_access_token(
-        data={"sub": user_data.email}, expires_delta=access_token_expires
+        data={"sub": user_data.username}, expires_delta=access_token_expires
     )
     data = services.create_user(db, user_data)
     data.token = access_token
     return data
 
-@app.post('/login')
-def login_user():
-    return {"message": "Hello World"}
+@app.post('/token')
+def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user_dict = services.get_user_by_username(db, form_data.username)
+    if not user_dict:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not services.verify_hashed_password(form_data.password, user_dict.password_hashed):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = services.create_access_token(
+        data={"sub": user_dict.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+    # return {"username": user_dict.name}
+    
 
 @app.get('/post')
 def get_posts():
     return {"message": "Hello World"}
 
 @app.post('/post')
-def create_post():
-    return {"message": "Hello World"}
+async def create_post(post_data: schemas.PostCreate, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    
+    token_data = verify_user(token)
+    user = services.get_user_by_username(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return services.make_post(db, token_data.username, post_data)
 
 @app.get('/notification')
 def get_notifications():
