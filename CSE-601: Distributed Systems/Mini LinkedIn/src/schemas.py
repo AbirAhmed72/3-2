@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, List
-
+from fastapi import UploadFile
 from sqlalchemy.sql.sqltypes import Integer, String
 
 
@@ -31,16 +31,14 @@ class TokenData(BaseModel):
     class Config:
         orm_mode = True
     
-        
+
 class PostCreate(BaseModel):
     post_text: str
-    image_url: str = None
-    
+    image_url: Optional[str]
     class Config:
         orm_mode = True
 class PostData(PostCreate):
-    post_datetime: float
-    # post_datetime: datetime
+    post_datetime: datetime
     username: str
     class Config:
         orm_mode = True

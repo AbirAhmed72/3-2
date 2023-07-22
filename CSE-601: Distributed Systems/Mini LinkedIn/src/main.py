@@ -1,7 +1,7 @@
-import random
+import minio, uuid, io
 import joblib as jb
 import models, schemas, services
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 
@@ -15,7 +15,7 @@ from database import SessionLocal, engine
 
 from datetime import datetime, timedelta, time
 from jose import JWTError,jwt
-
+from minio import Minio
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -27,6 +27,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+minio_client = Minio(
+    "127.0.0.1:9000",
+    access_key="28ZpKWknkPiqAl2PJ3W5",
+    secret_key="ss86LVMEu7FeRFqmLgZtyUgHF8J7nZI4tyw2ZS1S",
+    secure=False  # Set to True if using HTTPS
+)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 # dependency
@@ -65,7 +73,9 @@ async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(ge
     )
     data = services.create_user(db, user_data)
     data.token = access_token
-    return data
+    # return data
+    return{"message" : f"User {data.username} registered successfully!"}
+
 
 @app.post('/token')
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -90,23 +100,73 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     # return {"username": user_dict.name}
     
 
-@app.get('/post')
-def get_posts():
-    return {"message": "Hello World"}
 
 @app.post('/post')
-async def create_post(post_data: schemas.PostCreate, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    
+async def create_post(post_text: str, image: UploadFile = File(None), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     token_data = verify_user(token)
+
+    user = services.get_user_by_username(db, username=token_data.username)
+    print(user.username)
+    if user is None:
+        raise credentials_exception
+
+    image_url = None
+    if image:
+        # Generate a unique filename for the image
+        image_filename = f"{user.username}_{uuid.uuid4().hex}.jpg"
+        print(image_filename)
+
+        # Save the image to bytes and send to MinIO bucket
+        image_bytes = await image.read()
+        
+        minio_client.put_object(
+            "minilinkedin",
+            image_filename,
+            io.BytesIO(image_bytes),  
+            length=len(image_bytes),
+            content_type="image/jpeg"
+        )
+
+        # Construct the image URL based on MinIO server URL and bucket name
+        image_url = f"http://127.0.0.1:9000/minilinkedin/{image_filename}"
+        print(image_url)
+    
+    services.make_post(db, token_data.username, post_text, image_url)
+
+    return{"message" : "Post uploaded successfully!"}
+
+    
+@app.get('/post', response_model=List[schemas.PostData])
+def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    token_data = verify_user(token)
+
     user = services.get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
-    return services.make_post(db, token_data.username, post_data)
 
-@app.get('/notification')
-def get_notifications():
-    return {"message": "Hello World"}
+    # Get all posts except the current user's posts
+    posts = db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
+    
+    latest_posts = []
+    for post in posts:
+        post_data = schemas.PostData(
+            username=post.username,
+            post_text=post.post_text,
+            image_url=post.image_url,
+            post_datetime=post.created_at.timestamp(),
+        )
+        latest_posts.append(post_data)
+
+    return latest_posts
+
+
 
 @app.post('/notification')
 def create_notification ():
+    return {"message": "Hello World"}
+
+
+
+@app.get('/notification')
+def get_notifications():
     return {"message": "Hello World"}

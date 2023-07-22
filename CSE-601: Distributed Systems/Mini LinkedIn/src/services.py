@@ -48,14 +48,17 @@ def get_user_by_username(db: Session, username: str):
     print("Checking existing users")
     return db.query(models.User).filter(models.User.username == username).first()
 
+def get_all_users(db: Session):
+    return db.query(models.User).all()
+
 def get_user_by_id(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.User).filter(models.User.id == id).first()
 
-def make_post(db: Session, current_username: str, post: schemas.PostData):
+def make_post(db: Session, current_username: str, post_text, image_url: Optional[str] = None):
     db_post = models.Post(
-        post_text = post.post_text,
-        image_url = post.image_url,
+        post_text = post_text,
+        image_url = image_url,
         created_at = datetime.utcnow(),
         username = current_username
     )
