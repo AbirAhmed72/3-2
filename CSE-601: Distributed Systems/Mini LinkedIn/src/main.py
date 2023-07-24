@@ -169,7 +169,14 @@ def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 
 
 @app.post('/notification')
-def create_notification ():
+def create_notification (notification_data: schemas.NotificationCreate, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    token_data = verify_user(token)
+    user = services.get_user_by_username(db, username=token_data.username)
+    print(user.username)
+    if user is None:
+        raise credentials_exception
+    
     return {"message": "Hello World"}
 
 
