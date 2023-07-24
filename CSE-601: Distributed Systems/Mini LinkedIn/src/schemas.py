@@ -47,10 +47,10 @@ class PostData(PostCreate):
 class NotificationCreate(BaseModel):
     notification_text: str
     is_read: bool = False
-    notification_datetime: float
-    # notification_datetime: datetime
+    # notification_datetime: float
+    notification_datetime: datetime
     pid: int
-    uid: int
+    username: str
     class Config:
         orm_mode = True
 class NotificationData(NotificationCreate):

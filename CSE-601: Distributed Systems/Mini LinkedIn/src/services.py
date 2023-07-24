@@ -67,6 +67,20 @@ def make_post(db: Session, current_username: str, post_text, image_url: Optional
     db.refresh(db_post)
 
     return db_post
+
+def make_notification(notification_data: schemas.NotificationCreate, db: Session):
+    new_notification = models.Notification(
+        notification_text = notification_data.notification_text,
+        pid = notification_data.pid,
+        username = notification_data.username,
+        created_at = datetime.utcnow(),
+        isRead = False
+    )
+    db.add(new_notification)
+    db.commit()
+    db.refresh(new_notification)
+
+    return new_notification
  
 # def make_appointment(db:Session, current_user_id:int, doctor_id: int, data: schemas.ConsultationData):
 

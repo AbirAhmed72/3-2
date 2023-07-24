@@ -109,7 +109,7 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 
 
 @app.post('/post')
-async def create_post(post_text: str, image: UploadFile = File(None), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def create_post(post_text: str, image: UploadFile = File(None), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db), notification_data = schemas.NotificationCreate):
     token_data = verify_user(token)
 
     user = services.get_user_by_username(db, username=token_data.username)
@@ -137,8 +137,16 @@ async def create_post(post_text: str, image: UploadFile = File(None), token: str
         # Construct the image URL based on MinIO server URL and bucket name
         image_url = f"http://127.0.0.1:9000/minilinkedin/{image_filename}"
         print(image_url)
-    
+      
     services.make_post(db, token_data.username, post_text, image_url)
+
+    post = db.query(models.Post).filter_by(pid=notification_data.pid).first()
+    user = db.query(models.User).filter_by(username=notification_data.username).first()
+    
+    if not post or not user:
+        raise HTTPException(status_code=404, detail="Post or User not found")
+    else: 
+        services.make_notification(notification_data, db)
 
     return{"message" : "Post uploaded successfully!"}
 
@@ -177,7 +185,14 @@ def create_notification (notification_data: schemas.NotificationCreate, token: s
     if user is None:
         raise credentials_exception
     
-    return {"message": "Hello World"}
+    post = db.query(models.Post).filter_by(pid=notification_data.pid).first()
+    user = db.query(models.User).filter_by(username=notification_data.username).first()
+    
+    if not post or not user:
+        raise HTTPException(status_code=404, detail="Post or User not found")
+    else: services.make_notification(notification_data, db)
+    
+    return notification_data
 
 
 
