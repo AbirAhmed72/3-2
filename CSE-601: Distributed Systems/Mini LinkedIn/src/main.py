@@ -30,8 +30,8 @@ app.add_middleware(
 
 minio_client = Minio(
     "127.0.0.1:9000",
-    access_key="28ZpKWknkPiqAl2PJ3W5",
-    secret_key="ss86LVMEu7FeRFqmLgZtyUgHF8J7nZI4tyw2ZS1S",
+    access_key="Abir",
+    secret_key="12345678",
     secure=False  # Set to True if using HTTPS
 )
 
