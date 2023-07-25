@@ -1,7 +1,7 @@
-import minio, uuid, io
+import random
 import joblib as jb
 import models, schemas, services
-from fastapi import Depends, FastAPI, HTTPException, UploadFile, File
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 
@@ -15,7 +15,7 @@ from database import SessionLocal, engine
 
 from datetime import datetime, timedelta, time
 from jose import JWTError,jwt
-from minio import Minio
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -27,14 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-minio_client = Minio(
-    "127.0.0.1:9000",
-    access_key="28ZpKWknkPiqAl2PJ3W5",
-    secret_key="ss86LVMEu7FeRFqmLgZtyUgHF8J7nZI4tyw2ZS1S",
-    secure=False  # Set to True if using HTTPS
-)
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 
 # dependency
@@ -73,9 +65,7 @@ async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(ge
     )
     data = services.create_user(db, user_data)
     data.token = access_token
-    # return data
-    return{"message" : f"User {data.username} registered successfully!"}
-
+    return data
 
 @app.post('/token')
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -100,9 +90,12 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     # return {"username": user_dict.name}
     
 
+@app.get('/post')
+def get_posts():
+    return {"message": "Hello World"}
 
 @app.post('/post')
-async def create_post(post_text: str, image: UploadFile = File(None), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db), notification_data = schemas.NotificationCreate):
+async def create_post(post_text: str, image: UploadFile = File(None), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     token_data = verify_user(token)
 
     user = services.get_user_by_username(db, username=token_data.username)
@@ -130,62 +123,25 @@ async def create_post(post_text: str, image: UploadFile = File(None), token: str
         # Construct the image URL based on MinIO server URL and bucket name
         image_url = f"http://127.0.0.1:9000/minilinkedin/{image_filename}"
         print(image_url)
-      
-    services.make_post(db, token_data.username, post_text, image_url)
-
-    post = db.query(models.Post).filter_by(pid=notification_data.pid).first()
-    user = db.query(models.User).filter_by(username=notification_data.username).first()
     
-    if not post or not user:
-        raise HTTPException(status_code=404, detail="Post or User not found")
-    else: 
-        services.make_notification(notification_data, db)
+    services.make_post(db, token_data.username, post_text, image_url)
 
     return{"message" : "Post uploaded successfully!"}
 
     
-@app.get('/post', response_model=List[schemas.PostData])
-def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     token_data = verify_user(token)
-
     user = services.get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
+    return services.make_post(db, token_data.username, post_data)
 
-    # Get all posts except the current user's posts
-    posts = db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
-    
-    latest_posts = []
-    for post in posts:
-        post_data = schemas.PostData(
-            username=post.username,
-            post_text=post.post_text,
-            image_url=post.image_url,
-            post_datetime=post.created_at.timestamp(),
-        )
-        latest_posts.append(post_data)
-
-    return latest_posts
-
-
+@app.get('/notification')
+def get_notifications():
+    return {"message": "Hello World"}
 
 @app.post('/notification')
-def create_notification (notification_data: schemas.NotificationCreate, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-
-    token_data = verify_user(token)
-    user = services.get_user_by_username(db, username=token_data.username)
-    print(user.username)
-    if user is None:
-        raise credentials_exception
-    
-    post = db.query(models.Post).filter_by(pid=notification_data.pid).first()
-    user = db.query(models.User).filter_by(username=notification_data.username).first()
-    
-    if not post or not user:
-        raise HTTPException(status_code=404, detail="Post or User not found")
-    else: services.make_notification(notification_data, db)
-    
-    return notification_data
+def create_notification ():
+    return {"message": "Hello World"}
 
 
 
