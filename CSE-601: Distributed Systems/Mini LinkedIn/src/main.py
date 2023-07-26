@@ -1,7 +1,8 @@
+import os
 import minio, uuid, io
 import joblib as jb
 import models, schemas, services
-from fastapi import Depends, FastAPI, HTTPException, UploadFile, File
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 
@@ -77,7 +78,7 @@ async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(ge
 
 
 @app.post('/token')
-def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user_dict = services.get_user_by_username(db, form_data.username)
     if not user_dict:
         raise HTTPException(
@@ -152,7 +153,7 @@ async def create_post(post_text: str, image: UploadFile = File(None), token: str
 
 
 @app.get('/post', response_model=List[schemas.PostData])
-def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     token_data = verify_user(token)
 
     user = services.get_user_by_username(db, username=token_data.username)
@@ -176,15 +177,26 @@ def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 
 
 @app.get('/notification')
-def get_notifications(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_notifications(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     token_data = verify_user(token)
 
     user = services.get_user_by_username(db, username=token_data.username)
     if user is None:
         raise credentials_exception
-    unread_notifications = []
     
+    unread_notifications = []    
     notifications = services.get_unread_notifications(db, token_data.username)
+
+    for notification in notifications:
+        notification.is_read = True
+        db.add(notification)
+
+    db.commit()
+
+    # for notification in notifications:
+    #     if notification.is_read:
+    #         db_url = os.environ.get("DATABASE_URL")
+    #         BackgroundTasks.add_task(services.start_notification_cleaner, db_url, notification.nid)
     
     for notification in notifications:
         notification_data = schemas.NotificationData(
@@ -192,11 +204,35 @@ def get_notifications(token: str = Depends(oauth2_scheme), db: Session = Depends
             notification_datetime=notification.created_at
         )
         unread_notifications.append(notification_data)
-    return unread_notifications
 
+    if unread_notifications:
+        return unread_notifications
+    else: 
+        return {"message" : "No pending notifications!"}
+    
 
+@app.get("notification/{notification_id}/post")
+async def get_post_by_notification(notification_id: int, token: str = Depends(oauth2_scheme) ,db: Session = Depends(get_db)):
+    token_data = verify_user(token)
 
+    user = services.get_user_by_username(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    
+    notification = services.get_notification_by_nid(db, notification_id)
 
-# @app.post('/notification')
-# def create_notification ():
-#     return {"message": "Hello World"}
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification Not Found!")
+
+    post = services.get_post_by_pid(db, notification.pid)
+
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    post_data = schemas.PostData(
+        username=post.username,
+        post_text=post.post_text,
+        image_url=post.image_url,
+        post_datetime=post.created_at.timestamp(),
+    )
+    return post_data

@@ -55,10 +55,6 @@ class NotificationCreate(BaseModel):
     username: str
     class Config:
         orm_mode = True
-# class NotificationData(NotificationCreate):
-#     nid: int
-#     class Config:
-#         orm_mode = True
 
 class NotificationData(BaseModel):
     notification_datetime: datetime

@@ -1,3 +1,5 @@
+import asyncio
+import threading
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.sqltypes import Integer
@@ -6,6 +8,13 @@ from jose import JWTError, jwt #JSON Web Token
 from datetime import datetime, time, timedelta
 import random
 from passlib.hash import bcrypt
+
+from sqlalchemy import create_engine, engine
+from sqlalchemy.engine import base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
+
 SECRET_KEY = 'e2c6a3bc1aad22372e102e8f9f657bccd65676aef94587815b9d4d2c4960a650'
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -43,9 +52,15 @@ def get_user_by_username(db: Session, username: str):
 def get_all_users(db: Session):
     return db.query(models.User).all()
 
-def get_user_by_id(db: Session, id: int):
+def get_user_by_uid(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.User).filter(models.User.id == id).first()
+
+def get_notification_by_nid(db: Session, nid: int):
+    return db.query(models.Notification).filter(models.Notification.nid == nid).first()
+
+def get_post_by_pid(db: Session, pid: int):
+    return db.query(models.Post).filter(models.Post.pid == pid).first()
 
 def make_post(db: Session, current_username: str, post_text, image_url: Optional[str] = None):
     db_post = models.Post(
@@ -79,6 +94,39 @@ def make_notification(db: Session, notification_data: schemas.NotificationCreate
 def get_unread_notifications(db: Session, username: str) -> List[models.Notification]:
     return db.query(models.Notification).filter(models.Notification.username == username, models.Notification.is_read == False).all()
 
+
+# async def clean_notifications(db_url, notification_id):
+#     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) 
+
+#     db = SessionLocal(bind=create_engine(db_url))
+    
+#     # Wait for 5 seconds before deleting the notification
+#     await asyncio.sleep(5)
+    
+#     # Delete the notification from the database
+#     delete_notification(db, notification_id)
+
+#     # Close the database session
+#     db.close()
+
+
+# def delete_notification(db, notification_id):
+#     # Your code to delete the notification from the database
+#     # Implement the logic to delete the notification with the given notification_id
+#     # For example:
+#     notification = get_notification_by_nid(db, notification_id)
+#     if notification and notification.is_read:
+#         db.delete(notification)
+#         db.commit()
+
+# async def start_notification_cleaner(db_url, notification_id):
+#     await clean_notifications(db_url, notification_id)
+
+
+
+# def clean_notification_after_seeing(db, notification_id):
+#     cleaner_thread = threading.Thread(target=start_notification_cleaner, args=(db, notification_id))
+#     cleaner_thread.start()
 # def make_appointment(db:Session, current_user_id:int, doctor_id: int, data: schemas.ConsultationData):
 #     appointment = models.Consultation(
 #         user_id = current_user_id,
