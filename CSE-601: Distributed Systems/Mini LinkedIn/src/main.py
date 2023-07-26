@@ -129,7 +129,24 @@ async def create_post(post_text: str, image: UploadFile = File(None), token: str
         image_url = f"http://127.0.0.1:9000/minilinkedin/{image_filename}"
         print(image_url)
 
-    services.make_post(db, token_data.username, post_text, image_url)
+    # services.make_post(db, token_data.username, post_text, image_url)
+
+    # Create the post
+    new_post = services.make_post(db, token_data.username, post_text, image_url)
+
+    # Get all users (except the one who posted)
+    all_users_except_poster = db.query(models.User).filter(models.User.username != user.username).all()
+
+    # Create a notification for each user
+    for user_to_notify in all_users_except_poster:
+        notification_data = schemas.NotificationCreate(
+            notification_text=f"{user.username} made a new post...",
+            pid=new_post.pid,
+            username=user_to_notify.username,
+            notification_datetime=datetime.utcnow()
+        )
+
+        services.make_notification(db, notification_data)
 
     return{"message" : "Post uploaded successfully!"}
 
@@ -158,13 +175,28 @@ def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
     return latest_posts
 
 
-
-@app.post('/notification')
-def create_notification ():
-    return {"message": "Hello World"}
-
-
-
 @app.get('/notification')
-def get_notifications():
-    return {"message": "Hello World"}
+def get_notifications(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    token_data = verify_user(token)
+
+    user = services.get_user_by_username(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    unread_notifications = []
+    
+    notifications = services.get_unread_notifications(db, token_data.username)
+    
+    for notification in notifications:
+        notification_data = schemas.NotificationData(
+            notification_text=notification.notification_text,
+            notification_datetime=notification.created_at
+        )
+        unread_notifications.append(notification_data)
+    return unread_notifications
+
+
+
+
+# @app.post('/notification')
+# def create_notification ():
+#     return {"message": "Hello World"}

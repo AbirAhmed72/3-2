@@ -58,7 +58,27 @@ def make_post(db: Session, current_username: str, post_text, image_url: Optional
     db.commit()
     db.refresh(db_post)
     return db_post
- 
+
+def make_notification(db: Session, notification_data: schemas.NotificationCreate):
+    # Create a Notification object with the provided data
+    notification = models.Notification(
+        username=notification_data.username,
+        pid=notification_data.pid,
+        notification_text=notification_data.notification_text,
+        is_read=notification_data.is_read,
+        created_at=notification_data.notification_datetime
+    )
+
+    # Add the notification to the database session
+    db.add(notification)
+    db.commit()
+    db.refresh(notification)
+
+    return notification
+
+def get_unread_notifications(db: Session, username: str) -> List[models.Notification]:
+    return db.query(models.Notification).filter(models.Notification.username == username, models.Notification.is_read == False).all()
+
 # def make_appointment(db:Session, current_user_id:int, doctor_id: int, data: schemas.ConsultationData):
 #     appointment = models.Consultation(
 #         user_id = current_user_id,
