@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>My First Heading</h1>
+
+<p>My first paragraph.</p>
+
+<script>
+	const url = "http://127.0.0.1:8000/register";
+const data = {
+  username: "Abhijit Paul",
+  password: "stu458"
+};
+
+fetch(url, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(data)
+})
+  .then(response => response.json())
+  .then(data => {
+    document.write(JSON.stringify(data));
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
+
+</script>
+
+</body>
+</html>
+
+

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <!-- Add any CSS links or styles here -->
+</head>
+<body>
+  <!-- Your login form in HTML -->
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<script>
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  // Replace "http://your_server_url/login_user" with the actual URL of your server's login endpoint
+  const url = "http://localhost:8000/token";
+  const data = new URLSearchParams();
+  data.append("username", username);
+  data.append("password", password);
+
+  fetch(url, {
+    method: "POST",
+    body: data
+  })
+    .then(response => response.json())
+    .then(data => {
+      // Handle the response data here
+      console.log(data);
+      localStorage.setItem("token", data.access_token);
+      console.log(localStorage.getItem("token"));
+    })
+    .catch(error => {
+      // Handle any errors that occur during the fetch
+      console.error("Error:", error);
+    });
+}
+</script>
+
+</body>
+</html
+
