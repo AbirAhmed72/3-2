@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; // Replace with your actual backend API base URL
 
 const LoginPage = () => {
+  const navigate = useNavigate(); // Initialize useNavigate hook
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -23,7 +25,7 @@ const LoginPage = () => {
         }
       );
       localStorage.setItem('access_token', response.data.access_token);
-      // Redirect or do something else on successful login
+      navigate('/me'); // Redirect to homepage
     } catch (error) {
       console.error('Login Error:', error);
     }

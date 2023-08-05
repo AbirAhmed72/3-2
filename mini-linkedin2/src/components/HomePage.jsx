@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; // Replace with your actual backend API base URL
 
@@ -17,7 +17,6 @@ const HomePage = () => {
     if (access_token) {
       setLoggedIn(true);
       fetchPosts(access_token);
-      fetchNotifications(access_token);
     }
   }, []);
 
@@ -33,21 +32,6 @@ const HomePage = () => {
       })
       .catch((error) => {
         console.error('Error fetching posts:', error);
-      });
-  };
-
-  const fetchNotifications = (access_token) => {
-    axios
-      .get(`${API_BASE_URL}/notification`, {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      })
-      .then((response) => {
-        setNotifications(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching notifications:', error);
       });
   };
 
@@ -72,9 +56,9 @@ const HomePage = () => {
     if (selectedImage) {
       formData.append('image', selectedImage); // Make sure 'selectedImage' holds the user's selected image
     }
-
+  
     const access_token = localStorage.getItem('access_token');
-
+  
     // Make a POST request to create a new post
     axios
       .post(`${API_BASE_URL}/post`, formData, {
@@ -89,6 +73,22 @@ const HomePage = () => {
       })
       .catch((error) => {
         console.error('Error submitting post:', error.response);
+      });
+  };
+
+  const handleFetchNotifications = () => {
+    const access_token = localStorage.getItem('access_token');
+    axios
+      .get(`${API_BASE_URL}/notification`, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      })
+      .then((response) => {
+        setNotifications(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching notifications:', error);
       });
   };
 
@@ -125,6 +125,9 @@ const HomePage = () => {
           ) : (
             <p>No posts available.</p>
           )}
+          <div>
+            <button onClick={handleFetchNotifications}>Fetch Notifications</button>
+          </div>
           {notifications.length > 0 && (
             <div>
               <h3>Notifications ({notifications.length})</h3>
@@ -139,13 +142,7 @@ const HomePage = () => {
           )}
         </div>
       ) : (
-        <div>
-          <h2>Welcome to the Homepage</h2>
-          <p>You are not logged in.</p>
-          <p>
-            <Link to="/login">Login</Link> or <Link to="/register">Register</Link> to view posts.
-          </p>
-        </div>
+        <p>Please log in to view this page.</p>
       )}
     </div>
   );
