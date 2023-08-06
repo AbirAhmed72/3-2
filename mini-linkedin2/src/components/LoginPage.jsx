@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
+import '../styles/loginPageStyles.css';
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; // Replace with your actual backend API base URL
 
@@ -33,7 +34,7 @@ const LoginPage = () => {
 
   return (
     <div>
-      <h2>Login</h2>
+      <h2 >Login</h2>
       <form onSubmit={handleLogin}>
         <div>
           <label htmlFor="username">Username:</label>

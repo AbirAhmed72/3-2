@@ -42,10 +42,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
 # dependency
 def get_db():
     db = SessionLocal()
+
+    # yield db
     try:
         yield db
     finally:
         db.close()
+
+
 credentials_exception = HTTPException(
         status_code=401,
         detail="Could not Validate the credentials",
@@ -233,6 +237,55 @@ async def get_notifications(token: str = Depends(oauth2_scheme), db: Session = D
         return unread_notifications
     else: 
         return {"message" : "No pending notifications!"}
+    
+
+
+
+
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+
+# Add the notification cleaner job
+# def clean_notifications():
+#     one_hour_ago = datetime.now() - timedelta(hours=1)
+#     delete_query = "DELETE FROM notifications WHERE timestamp <= %s"
+#     db = get_db()
+#     cursor = db.cursor()
+#     cursor.execute(delete_query, (one_hour_ago,))
+#     db.commit()
+#     cursor.close()
+
+def delete_old_notifications(db: Session):
+    # Calculate the timestamp for 1 minute ago
+    one_minute_ago = datetime.utcnow() - timedelta(minutes=.1)
+    print(one_minute_ago)
+
+    # Get notifications older than 1 minute
+    old_notifications = services.get_old_notifications(db, one_minute_ago)
+
+    # Delete the old notifications
+    for notification in old_notifications:
+        db.delete(notification)
+
+    db.commit()
+
+# Schedule the notification cleaner job to run every hour (you can adjust the interval as needed)
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(clean_notifications, 'interval', minutes=1)
+# scheduler.start()
+
+scheduler = BackgroundScheduler(daemon=True)
+db_url = os.environ.get("sqlite:///../sqlite.db")  # Replace with your database URL
+scheduler.add_job(delete_old_notifications, 'interval', args=[next(get_db())], minutes=.1)
+
+# Start the scheduler
+scheduler.start()
+
+
+
+
+
     
 
 # @app.get("notification/{notification_id}/post")

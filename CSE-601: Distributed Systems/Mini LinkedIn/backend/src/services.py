@@ -96,6 +96,46 @@ def get_unread_notifications(db: Session, username: str) -> List[models.Notifica
     return db.query(models.Notification).filter(models.Notification.username == username, models.Notification.is_read == False).all()
 
 
+
+def delete_seen_notifications(db: Session):
+    # Get all the seen notifications
+    seen_notifications = db.query(models.Notification).filter(models.Notification.is_read == True).all()
+
+    # Delete the seen notifications
+    for notification in seen_notifications:
+        db.delete(notification)
+
+    db.commit()
+    db.refresh(notification)
+
+
+def get_old_notifications(db: Session, timestamp: datetime):
+    """
+    Retrieve notifications older than the given timestamp from the database.
+
+    Args:
+        db (Session): SQLAlchemy database session.
+        timestamp (datetime): The timestamp to filter notifications.
+
+    Returns:
+        List[models.Notification]: List of notifications older than the given timestamp.
+    """
+    print(timestamp)
+
+    return db.query(models.Notification).filter(models.Notification.created_at < timestamp).all()
+
+
+
+
+
+
+
+
+
+
+
+
+
 # async def clean_notifications(db_url, notification_id):
 #     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) 
 

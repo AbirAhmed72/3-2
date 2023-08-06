@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/notificationStyles.css';
 
 const Notification = ({ notifications }) => {
   // Check if notifications is an array, otherwise, set it to an empty array

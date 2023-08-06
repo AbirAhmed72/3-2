@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import '../styles/registerPageStyles.css';
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; // Replace with your actual backend API base URL
 

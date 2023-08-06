@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../styles/homePageStyles.css';
+
 
 const API_BASE_URL = 'http://127.0.0.1:8000'; // Replace with your actual backend API base URL
 
@@ -64,7 +66,7 @@ const HomePage = () => {
       .post(`${API_BASE_URL}/post`, formData, {
         headers: {
           Authorization: `Bearer ${access_token}`,
-          'Content-Type': 'multipart/form-data', // Set the correct content type for the form data
+          // 'Content-Type': 'multipart/form-data', // Set the correct content type for the form data
         },
       })
       .then((response) => {
