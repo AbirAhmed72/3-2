@@ -12,7 +12,8 @@ async def find_all_users():
     # return db.find()
     # print (db.Users.find())
     # print (usersEntity(db.Users.find()))
-    all_users = serializeList(db.Users.find())
+    # all_users = serializeList(db.Users.find())
+    all_users = usersEntity(db.Users.find())
     return (all_users)
 
 @user.post('/')
@@ -23,7 +24,7 @@ async def create_user(user: UserCreate):
     inserted_user = db.Users.insert_one(user_dict)
 
     # Check if the insertion was successful
-    if inserted_user.acknowledged:
+    if inserted_user:
         # Return the inserted user data with the generated ObjectId
         return (usersEntity(db.Users.find()))
 

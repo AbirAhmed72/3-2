@@ -28,3 +28,4 @@ typing-extensions
 uvicorn
 passlib
 bcrypt
+psycopg2-binary

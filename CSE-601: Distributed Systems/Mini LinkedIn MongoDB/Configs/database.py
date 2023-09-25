@@ -4,8 +4,8 @@ from pymongo import MongoClient
 
 # Create a MongoDB client
 mongo_url = "mongodb://localhost:27017/"
-# client = MongoClient(mongo_url)
-client = AsyncIOMotorClient(mongo_url)
+client = MongoClient(mongo_url)
+# client = AsyncIOMotorClient(mongo_url)
 db = client.MiniLinkedIn_DB
 
 
