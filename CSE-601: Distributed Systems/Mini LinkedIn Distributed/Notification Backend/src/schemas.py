@@ -10,27 +10,27 @@ class UserData(BaseModel):
     uid: int
     username: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 class UserCreate(BaseModel):
     username: str
     password: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ResponseUserData(UserData):
     token: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 class TokenData(BaseModel):
     username: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
     
         
 class PostCreate(BaseModel):
@@ -38,13 +38,13 @@ class PostCreate(BaseModel):
     image_url: str = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 class PostData(PostCreate):
     post_datetime: float
     # post_datetime: datetime
     username: str
     class Config:
-        orm_mode = True
+        from_attributes = True
     
 
 class NotificationCreate(BaseModel):
@@ -55,11 +55,11 @@ class NotificationCreate(BaseModel):
     pid: int
     username: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class NotificationData(BaseModel):
     notification_datetime: datetime
     notification_text: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

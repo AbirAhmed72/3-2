@@ -212,7 +212,7 @@ async def get_notifications(token: str = Depends(oauth2_scheme), db: Session = D
 #background task
 scheduler = BackgroundScheduler(daemon=True)
 db_url = os.environ.get("postgresql://postgres:1234@localhost:5432/MiniLinkedIn")  # Replace with your database URL
-scheduler.add_job(services.delete_old_notifications, 'interval', args=[next(database.get_db())], minutes=.1)
+scheduler.add_job(services.delete_old_notifications, 'interval', args=[next(database.get_db())], minutes=10)
 
 # Start the scheduler
 scheduler.start()
