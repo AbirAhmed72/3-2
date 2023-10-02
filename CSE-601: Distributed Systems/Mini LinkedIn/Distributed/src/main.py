@@ -50,7 +50,7 @@ async def root():
 
 @app.post('/register')
 async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(database.get_db)):
-    db_user = services.get_user_by_username(db, user_data.username)
+    db_user =  services.get_user_by_username(db, user_data.username)
     if db_user:
          raise HTTPException(status_code=400, detail="E-mail already Registered")
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -67,14 +67,14 @@ async def register_user(user_data: schemas.UserCreate,  db: Session = Depends(da
 
 @app.post('/token')
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    user_dict = services.get_user_by_username(db, form_data.username)
-    if not user_dict:
+    db_user = services.get_user_by_username(db, form_data.username)
+    if not db_user:
         raise HTTPException(
             status_code=401,
             detail="Invalid username",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if not services.verify_hashed_password(form_data.password, user_dict.password_hashed):
+    if not services.verify_hashed_password(form_data.password, db_user.password_hashed):
         raise HTTPException(
             status_code=401,
             detail="Invalid Password",
@@ -82,7 +82,7 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessi
         )
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = services.create_access_token(
-        data={"sub": user_dict.username}, expires_delta=access_token_expires
+        data={"sub": db_user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
     # return {"username": user_dict.name}
@@ -164,17 +164,18 @@ async def get_posts(token: str = Depends(oauth2_scheme), db: Session = Depends(d
         raise services.credentials_exception
     
     # Get all posts except the current user's posts
-    posts = db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
+    latest_posts = services.get_latest_posts(db, user )
+    # posts = await db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
 
-    latest_posts = []
-    for post in posts:
-        post_data = schemas.PostData(
-            username=post.username,
-            post_text=post.post_text,
-            image_url=post.image_url,
-            post_datetime=post.created_at.timestamp(),
-        )
-        latest_posts.append(post_data)
+    # latest_posts = []
+    # for post in posts:
+    #     post_data = schemas.PostData(
+    #         username=post.username,
+    #         post_text=post.post_text,
+    #         image_url=post.image_url,
+    #         post_datetime=post.created_at.timestamp(),
+    #     )
+    #     latest_posts.append(post_data)
 
     return latest_posts
 
@@ -211,9 +212,9 @@ async def get_notifications(token: str = Depends(oauth2_scheme), db: Session = D
 
 #background task
 scheduler = BackgroundScheduler(daemon=True)
-db_url = os.environ.get("sqlite:////sqlite.db")  # Replace with your database URL
-scheduler.add_job(services.delete_old_notifications, 'interval', args=[next(database.get_db())], minutes=1)
+db_url = os.environ.get("postgresql://postgres:1234@localhost:5432/MiniLinkedIn")  # Replace with your database URL
+scheduler.add_job(services.delete_old_notifications, 'interval', args=[next(database.get_db())], minutes=10)
 
 # Start the scheduler
-scheduler.start()
+# scheduler.start()
 

@@ -98,6 +98,21 @@ def make_post(db: Session, current_username: str, post_text, image_url: Optional
     db.refresh(db_post)
     return db_post
 
+def get_latest_posts(db: Session, user):
+    posts = db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
+
+    latest_posts = []
+    for post in posts:
+        post_data = schemas.PostData(
+            username=post.username,
+            post_text=post.post_text,
+            image_url=post.image_url,
+            post_datetime=post.created_at.timestamp(),
+        )
+        latest_posts.append(post_data)
+    
+    return latest_posts
+
 def make_notification(db: Session, notification_data: schemas.NotificationCreate):
     # Create a Notification object with the provided data
     notification = models.Notification(
@@ -147,15 +162,3 @@ def delete_old_notifications(db: Session):
         db.delete(notification)
 
     db.commit()
-
-
-# def delete_seen_notifications(db: Session):
-#     # Get all the seen notifications
-#     seen_notifications = db.query(models.Notification).filter(models.Notification.is_read == True).all()
-
-#     # Delete the seen notifications
-#     for notification in seen_notifications:
-#         db.delete(notification)
-
-#     db.commit()
-#     db.refresh(notification)

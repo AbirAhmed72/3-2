@@ -5,11 +5,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
-SQL_DATABASE_URL = "sqlite:///./sqlite.db"
+SQL_DATABASE_URL = "postgresql://postgres:1234@localhost:5432/MiniLinkedIn"
 
-engine = create_engine(
-    SQL_DATABASE_URL, connect_args = {"check_same_thread" : False} #SQLite Specific
-)
+engine = create_engine(SQL_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) 
 
@@ -25,4 +23,6 @@ def get_db():
         db.close()
 
 Base.metadata.create_all(bind=engine)
+
+
 
