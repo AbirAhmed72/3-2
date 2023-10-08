@@ -1,6 +1,8 @@
+# user_service/app/main.py
+
 from fastapi import FastAPI
-from user_service.app.api import user_apis
+from app.api.user_apis import user
 
-app = FastAPI()
+app = FastAPI(openapi_url="/api/v1/user/openapi.json", docs_url="/api/v1/user/docs")
 
-app.include_router(user_apis.router, prefix="/api/v1")
+app.include_router(user, prefix="/api/v1", tags=['User'])

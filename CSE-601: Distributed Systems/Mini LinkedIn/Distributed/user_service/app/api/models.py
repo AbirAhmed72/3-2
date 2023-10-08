@@ -1,5 +1,7 @@
+# user_service/app/api/models.py
+
 from sqlalchemy import Column, Integer, String
-from database import Base
+from app.api.database import Base
 
 class User(Base):
     __tablename__ = 'users'

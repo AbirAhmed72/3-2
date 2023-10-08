@@ -9,43 +9,51 @@ class TestMathOperations(unittest.TestCase):
 
     #Addition tests: 4 independent paths
     def test_add_positive_numbers(self):
-        self.assertEqual(self.math.add(5, 3), 8)
+        self.assertEqual(self.math.add(25, 13), 38)
 
     def test_add_both_negative(self):
         with self.assertRaises(ValueError):
-            self.math.add(-5, -3)
+            self.math.add(-45, -37)
 
     def test_add_first_negative(self):
         with self.assertRaises(ValueError):
-            self.math.add(-5, 3)
+            self.math.add(-59, 31)
 
     def test_add_second_negative(self):
         with self.assertRaises(ValueError):
-            self.math.add(5, -3)
+            self.math.add(44, -90)
 
-    #Subtraction tests: 3 independent paths
+    #Subtraction tests: 5 independent paths
     def test_subtract_positive_numbers(self):
-        self.assertEqual(self.math.subtract(5, 3), 2)
+        self.assertEqual(self.math.subtract(15, 13), 2)
 
-    def test_subtract_negative_numbers(self):
+    def test_subtract_negative_number_a(self):
         with self.assertRaises(ValueError):
-            self.math.subtract(-3, -5)
+            self.math.subtract(-53, 15)
+
+    def test_subtract_negative_number_b(self):
+        with self.assertRaises(ValueError):
+            self.math.subtract(23, -5)
+
+    def test_subtract_negative_number_both(self):
+        with self.assertRaises(ValueError):
+            self.math.subtract(-72, -45)
 
     def test_subtract_negative_result(self):
         with self.assertRaises(ValueError):
-            self.math.subtract(3, 5)
+            self.math.subtract(17, 93)
     
     #Multiplication tests: 4 independent paths
     def test_multiply_positive_numbers(self):
-        self.assertEqual(self.math.multiply(5, 3), 15)
+        self.assertEqual(self.math.multiply(2, 8), 16)
 
-    def test_multiply_by_zero(self):
-        self.assertEqual(self.math.multiply(5, 0), 0)
+    def test_multiply_by_zero_first(self):
+        self.assertEqual(self.math.multiply(22, 0), 0)
 
-    def test_multiply_zero(self):
-        self.assertEqual(self.math.multiply(0, 5), 0)
+    def test_multiply_by_zero_second(self):
+        self.assertEqual(self.math.multiply(0, 95), 0)
 
-    def test_multiply_both_zero(self):
+    def test_multiply_by_zero_both(self):
         with self.assertRaises(ValueError):
             self.math.multiply(0, 0)
 
@@ -64,6 +72,9 @@ class TestMathOperations(unittest.TestCase):
     #Exponential tests: 4 independent paths
     def test_exponential_positive_numbers(self):
         self.assertEqual(self.math.power(2, 3), 8)
+
+    def test_exponential_zero_number(self):
+        self.assertEqual(self.math.power(2, 0), 1)
 
     def test_negative_exponent(self):
         with self.assertRaises(ValueError):
@@ -93,7 +104,7 @@ class TestStringUtils(unittest.TestCase):
 
     #Length tests: 3 independent paths
     def test_calculate_length(self):
-        self.assertEqual(self.string_utils.calculate_length("Python"), 6)
+        self.assertEqual(self.string_utils.calculate_length("Kamal"), 5)
 
     def test_calculate_length_None_string(self):
         with self.assertRaises(ValueError):
@@ -103,17 +114,21 @@ class TestStringUtils(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.string_utils.calculate_length("   ")
 
-    #Substring tests: 3 independent paths
+    #Substring tests: 4 independent paths
     def test_contains_substring(self):
-        self.assertTrue(self.string_utils.contains_substring("Python is great", "is"))
+        self.assertTrue(self.string_utils.contains_substring("This is Abir", "Abir"))
+
+    def test_None_string_with_substring(self):
+        with self.assertRaises(ValueError):
+            self.string_utils.contains_substring(None, "Hi")
 
     def test_contains_None_substring(self):
         with self.assertRaises(ValueError):
-            self.string_utils.contains_substring("Hello", None)
+            self.string_utils.contains_substring("Kemon Acho", None)
 
     def test_contains_longer_substring(self):
         with self.assertRaises(ValueError):
-            self.string_utils.contains_substring("Hello", "Hello, World!")
+            self.string_utils.contains_substring("Bhalo", "Bhalo Achi!")
 
     #UpperCase tests: 3 independent paths
     def test_to_upper_case(self):
@@ -129,7 +144,7 @@ class TestStringUtils(unittest.TestCase):
 
     #TrimSpace tests: 3 independent paths
     def test_trim_whitespace(self):
-        self.assertEqual(self.string_utils.trim_whitespace("   Python   "), "Python")
+        self.assertEqual(self.string_utils.trim_whitespace("   PyUnit   "), "PyUnit")
 
     def test_trim_whitespace_None_string(self):
         with self.assertRaises(ValueError):
@@ -137,7 +152,7 @@ class TestStringUtils(unittest.TestCase):
 
     def test_trim_whitespace_short_string(self):
         with self.assertRaises(ValueError):
-            self.string_utils.trim_whitespace("abc")
+            self.string_utils.trim_whitespace("abcd")
 
 if __name__ == '__main__':
     unittest.main()
