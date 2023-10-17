@@ -8,9 +8,10 @@ from jose import JWTError
 import jwt
 from app.api import schemas, models
 from sqlalchemy.orm import Session
-
+import os
 
 SECRET_KEY = 'e2c6a3bc1aad22372e102e8f9f657bccd65676aef94587815b9d4d2c4960a650'
+# SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -72,3 +73,7 @@ def get_all_users(db: Session):
 def get_user_by_uid(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.User).filter(models.User.id == id).first()
+
+def all_users_except_poster(db: Session, username: str):
+    return db.query(models.User).filter(models.User.username != username).all()
+     

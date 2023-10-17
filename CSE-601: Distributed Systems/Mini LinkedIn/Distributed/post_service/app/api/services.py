@@ -1,24 +1,15 @@
-# services.py
-import asyncio
-import threading
+# post_service/app/api/services.py
+
 from typing import List, Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.sqltypes import Integer
-import models, schemas
-from jose import JWTError, jwt #JSON Web Token
+from . import models, schemas
 from datetime import datetime, time, timedelta
-import random
-from passlib.hash import bcrypt
-
-from sqlalchemy import create_engine, engine
-from sqlalchemy.engine import base
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+import httpx
 
-SECRET_KEY = 'e2c6a3bc1aad22372e102e8f9f657bccd65676aef94587815b9d4d2c4960a650'
-ALGORITHM = "HS256"
 
 credentials_exception = HTTPException(
         status_code=401,
@@ -26,20 +17,33 @@ credentials_exception = HTTPException(
         headers={"WWW-Authenticate": "Bearer"}
     )
 
-def get_user_by_username(db: Session, username: str):
-    print("Checking existing users")
-    return db.query(models.User).filter(models.User.username == username).first()
+async def get_user_info(token: str):
+    user_service_base_url = "http://127.0.0.1:8000"  # Replace with the actual URL of your user service
+    headers = {"Authorization": f"Bearer {token}"}
+    print("Request Headers:", headers) 
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{user_service_base_url}/api/v1/me", headers=headers)
+        if response.status_code == 200:
+            user_info = response.json()
+            return user_info
+        else:
+            # Handle authentication error
+            raise HTTPException(status_code=response.status_code, detail="Authentication error")
 
-def verify_user(token: str) -> schemas.TokenData:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = schemas.TokenData(username = username)
-        return token_data
-    except JWTError:
-        raise credentials_exception
+async def post_notification(token: str):
+    notification_service_base_url = "http://127.0.0.1:8002"  # Replace with the actual URL of your user service
+    headers = {"Authorization": f"Bearer {token}"}
+    print("Request Headers:", headers) 
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{user_service_base_url}/api/v1/me", headers=headers)
+        if response.status_code == 200:
+            user_info = response.json()
+            return user_info
+        else:
+            # Handle authentication error
+            raise HTTPException(status_code=response.status_code, detail="Authentication error")
+
+
 
 def get_post_by_pid(db: Session, pid: int):
     return db.query(models.Post).filter(models.Post.pid == pid).first()
@@ -57,15 +61,15 @@ def make_post(db: Session, current_username: str, post_text, image_url: Optional
     return db_post
 
 def get_latest_posts(db: Session, user):
-    posts = db.query(models.Post).filter(models.Post.username != user.username).order_by(models.Post.created_at.desc()).all()
+    posts = db.query(models.Post).order_by(models.Post.created_at.desc()).all()
 
     latest_posts = []
     for post in posts:
         post_data = schemas.PostData(
-            username=post.username,
             post_text=post.post_text,
             image_url=post.image_url,
             post_datetime=post.created_at.timestamp(),
+            username=post.username
         )
         latest_posts.append(post_data)
     

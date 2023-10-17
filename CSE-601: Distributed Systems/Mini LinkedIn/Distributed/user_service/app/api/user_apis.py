@@ -8,7 +8,7 @@ from app.api import schemas, database, services
 
 
 user = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "/api/v1/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "http://127.0.0.1:8000/api/v1/login")
 
 
 @user.post('/register')
@@ -51,3 +51,12 @@ async def get_current_user_info(token: str = Depends(oauth2_scheme), db: Session
     user = services.get_user_by_username(db, token_data.username)
     delattr(user, "password_hashed")
     return user
+
+@user.get('/all_users_except_poster')
+async def get_all_users_except_poster(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    token_data = services.verify_user(token)
+    # users = services.get_all_users(db)
+    # delattr(users, "password_hashed")
+    users =  services.all_users_except_poster(db, token_data.username)
+    usernames = [user.username for user in users]
+    return users

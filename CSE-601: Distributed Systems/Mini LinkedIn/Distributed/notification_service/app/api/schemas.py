@@ -1,22 +1,23 @@
 # post_service/app/api/schemas.py
 
+from datetime import datetime
 from typing import Optional
-from fastapi import UploadFile
 from pydantic import BaseModel
 
-class PostCreate(BaseModel):
-    post_text: str
-    image_url: Optional[UploadFile]
-    
+class NotificationCreate(BaseModel):
+    notification_text: str
+    is_read: bool = False
+    # notification_datetime: float
+    notification_datetime: datetime
+    pid: int
+    username: str
     class Config:
         from_attributes = True
 
-class PostData(BaseModel):
-    post_text: str
-    image_url: str = None
-    post_datetime: float
-    # post_datetime: datetime
-    username: str
+class NotificationData(BaseModel):
+    notification_datetime: datetime
+    notification_text: str
+
     class Config:
         from_attributes = True
 
